@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexBook | Login</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col pt-20">
+
+    <!-- Navbar -->
+    <nav class="glass fixed w-full z-50 top-0 left-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center gap-2">
+                        <i class="fas fa-book-open text-3xl text-sky-400"></i>
+                        <span class="text-2xl font-bold tracking-tight serif-font">Nex<span class="text-gradient">Book</span></span>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="books.html" class="text-gray-300 hover:text-white transition-colors">Books</a>
+                </div>
+                <div class="flex items-center" id="auth-links">
+                    <a href="login.html" class="text-sky-400 font-medium border-b-2 border-sky-400 pb-1 mr-4 object-cover">Log In</a>
+                    <a href="register.html" class="px-4 py-2 rounded-lg bg-gradient-primary text-white transition-all hover:shadow-lg hover:shadow-sky-500/30 font-medium">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-4 min-h-[85vh] relative z-10">
+        <div class="glass-card w-full max-w-md p-8 rounded-2xl relative animate-fade-in shadow-2xl shadow-sky-900/20">
+            <!-- Decorative blur -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-sky-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 z-0"></div>
+            
+            <div class="relative z-10 text-center mb-8">
+                <h2 class="text-3xl font-bold serif-font mb-2">Welcome Back</h2>
+                <p class="text-slate-400 text-sm">Please log in to your account.</p>
+            </div>
+            
+            <div id="error-alert" class="hidden bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm relative z-10 text-center">
+                Invalid username or password
+            </div>
+
+            <form id="login-form" class="relative z-10">
+                <div class="mb-5">
+                    <label class="block text-slate-300 text-sm font-medium mb-2" for="username">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <input type="text" id="username" name="username" class="input-glass w-full pl-10 pr-4 py-3 rounded-xl focus:ring-sky-500 focus:border-sky-500" placeholder="Enter your username" required>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-slate-300 text-sm font-medium mb-2" for="password">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <input type="password" id="password" name="password" class="input-glass w-full pl-10 pr-4 py-3 rounded-xl focus:ring-sky-500 focus:border-sky-500" placeholder="Enter your password" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-primary hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center hover:shadow-lg hover:shadow-sky-500/30">
+                    <span id="btn-text">Sign In <i class="fas fa-sign-in-alt ml-2"></i></span>
+                    <i id="btn-loader" class="fas fa-circle-notch fa-spin hidden"></i>
+                </button>
+            </form>
+            
+            <p class="mt-6 text-center text-slate-400 text-sm relative z-10">
+                Don't have an account? <a href="register.html" class="text-sky-400 hover:text-sky-300 hover:underline">Sign up</a>
+            </p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-8 mt-auto glass">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400">
+            <p>&copy; 2026 NexBook. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btnText = document.getElementById('btn-text');
+            const btnLoader = document.getElementById('btn-loader');
+            const errorAlert = document.getElementById('error-alert');
+            
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            errorAlert.classList.add('hidden');
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                // We use standard fetch instead of the wrapper because it's a completely open endpoint and might return 401 unhandled by wrapper
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if(!response.ok) {
+                    throw new Error('Invalid credentials');
+                }
+                
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', data.username);
+                localStorage.setItem('role', data.role);
+                
+                window.location.href = data.role === 'ROLE_ADMIN' ? 'admin.html' : 'index.html';
+                
+            } catch (error) {
+                errorAlert.classList.remove('hidden');
+            } finally {
+                btnText.classList.remove('hidden');
+                btnLoader.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

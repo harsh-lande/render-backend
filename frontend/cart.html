@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexBook | Cart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col pt-20">
+
+    <nav class="glass fixed w-full z-50 top-0 left-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center gap-2">
+                        <i class="fas fa-book-open text-3xl text-sky-400"></i>
+                        <span class="text-2xl font-bold tracking-tight serif-font">Nex<span class="text-gradient">Book</span></span>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="books.html" class="text-gray-300 hover:text-white transition-colors">Books</a>
+                </div>
+                <div class="flex items-center" id="auth-links"></div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+        <h1 class="text-4xl font-bold serif-font mb-8">Your Cart</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Cart Items -->
+            <div class="w-full lg:w-2/3">
+                <div id="cart-items" class="space-y-4">
+                    <!-- Dynamic Cart Items -->
+                </div>
+            </div>
+            
+            <!-- Summary -->
+            <div class="w-full lg:w-1/3">
+                <div class="glass-card rounded-2xl p-6 sticky top-28">
+                    <h3 class="text-xl font-bold mb-6 pb-4 border-b border-slate-700">Order Summary</h3>
+                    
+                    <div class="flex justify-between mb-4 text-slate-300">
+                        <span>Subtotal</span>
+                        <span id="subtotal">₹0</span>
+                    </div>
+                    <div class="flex justify-between mb-4 text-slate-300">
+                        <span>Shipping</span>
+                        <span>Free</span>
+                    </div>
+                    
+                    <div class="flex justify-between font-bold text-xl mb-8 pt-4 border-t border-slate-700 text-white">
+                        <span>Total</span>
+                        <span id="total" class="text-sky-400">₹0</span>
+                    </div>
+                    
+                    <a href="order.html" id="checkout-btn" class="w-full bg-gradient-primary text-white font-bold py-4 px-6 rounded-xl text-center block hover:shadow-lg hover:shadow-sky-500/30 transition-all">
+                        Proceed to Checkout <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if(!localStorage.getItem('token')) {
+                window.location.href = 'login.html';
+                return;
+            }
+            renderCart();
+        });
+        
+        function getCart() {
+            return JSON.parse(localStorage.getItem('cart') || '[]');
+        }
+        
+        function saveCart(cart) {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+        }
+        
+        function updateQuantity(id, delta) {
+            let cart = getCart();
+            let item = cart.find(i => i.id === id);
+            if(item) {
+                item.quantity += delta;
+                if(item.quantity <= 0) {
+                    cart = cart.filter(i => i.id !== id);
+                }
+                saveCart(cart);
+                renderCart();
+            }
+        }
+        
+        function removeItem(id) {
+            let cart = getCart();
+            cart = cart.filter(i => i.id !== id);
+            saveCart(cart);
+            renderCart();
+        }
+
+        function renderCart() {
+            const cartItemsEl = document.getElementById('cart-items');
+            const subtotalEl = document.getElementById('subtotal');
+            const totalEl = document.getElementById('total');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const cart = getCart();
+            
+            if(cart.length === 0) {
+                cartItemsEl.innerHTML = `
+                    <div class="glass-card rounded-2xl p-12 text-center flex flex-col items-center justify-center border-dashed border-2 border-slate-700">
+                        <i class="fas fa-shopping-basket text-6xl text-slate-600 mb-4"></i>
+                        <h2 class="text-2xl font-bold mb-2 text-slate-300">Your cart is empty</h2>
+                        <p class="text-slate-500 mb-6">Looks like you haven't added anything to your cart yet.</p>
+                        <a href="books.html" class="px-6 py-3 rounded-xl bg-sky-500/20 text-sky-400 font-medium hover:bg-sky-500/30 transition-colors">Start Shopping</a>
+                    </div>
+                `;
+                subtotalEl.textContent = '₹0';
+                totalEl.textContent = '₹0';
+                checkoutBtn.classList.add('opacity-50', 'pointer-events-none');
+                return;
+            }
+            
+            checkoutBtn.classList.remove('opacity-50', 'pointer-events-none');
+            let total = 0;
+            
+            cartItemsEl.innerHTML = cart.map(item => {
+                total += item.price * item.quantity;
+                const imgParsed = item.img.startsWith('book_img/') ? 'images/' + item.img.replace('book_img/', '') : 'images/default.jpg';
+                return `
+                    <div class="glass-card p-4 rounded-xl flex items-center gap-4 animate-fade-in transition-all">
+                        <img src="${imgParsed}" class="w-16 h-24 object-cover rounded-md border border-slate-700" alt="${item.name}">
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-lg mb-1 line-clamp-1">${item.name}</h4>
+                            <p class="text-sky-400 font-bold mb-2">₹${item.price}</p>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateQuantity(${item.id}, -1)" class="w-8 h-8 rounded bg-slate-800 flex items-center justify-center hover:text-sky-400 text-slate-300"><i class="fas fa-minus text-xs"></i></button>
+                                <span class="font-medium inline-block w-4 text-center">${item.quantity}</span>
+                                <button onclick="updateQuantity(${item.id}, 1)" class="w-8 h-8 rounded bg-slate-800 flex items-center justify-center hover:text-sky-400 text-slate-300"><i class="fas fa-plus text-xs"></i></button>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-xl mb-4 text-white">₹${item.price * item.quantity}</p>
+                            <button onclick="removeItem(${item.id})" class="text-red-400 hover:text-red-300 text-sm flex items-center gap-1 transition-colors"><i class="fas fa-trash-alt"></i> Remove</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            subtotalEl.textContent = `₹${total}`;
+            totalEl.textContent = `₹${total}`;
+        }
+    </script>
+</body>
+</html>

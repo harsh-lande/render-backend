@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexBook | Book Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col pt-20">
+
+    <nav class="glass fixed w-full z-50 top-0 left-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center gap-2">
+                        <i class="fas fa-book-open text-3xl text-sky-400"></i>
+                        <span class="text-2xl font-bold tracking-tight serif-font">Nex<span class="text-gradient">Book</span></span>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="books.html" class="text-sky-400 font-medium">Books</a>
+                </div>
+                <div class="flex items-center" id="auth-links"></div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+        <a href="books.html" class="text-slate-400 hover:text-white transition-colors mb-8 inline-block"><i class="fas fa-arrow-left mr-2"></i>Back to Library</a>
+        
+        <div id="book-container" class="glass-card rounded-3xl p-8 flex flex-col md:flex-row gap-12 animate-fade-in relative overflow-hidden">
+            <div class="flex justify-center items-center w-full py-20">
+                <i class="fas fa-circle-notch fa-spin text-4xl text-sky-400"></i>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-800 py-8 mt-auto glass">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400">
+            <p>&copy; 2026 NexBook. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = urlParams.get('id');
+            const container = document.getElementById('book-container');
+
+            if(!bookId) {
+                container.innerHTML = `<p class="text-center text-red-400 w-full py-20">No book ID provided.</p>`;
+                return;
+            }
+
+            try {
+                const b = await fetchAPI(`/books/${bookId}`, { method: 'GET' });
+                const imgParsed = b.bookImg.startsWith('book_img/') ? 'images/' + b.bookImg.replace('book_img/', '') : 'images/default.jpg';
+                
+                container.innerHTML = `
+                    <div class="w-full md:w-1/3 flex-shrink-0 relative">
+                        <img src="${imgParsed}" alt="${b.bookName}" class="w-full rounded-xl shadow-2xl shadow-sky-900/50 object-cover border border-slate-700">
+                        <span class="absolute top-4 left-4 bg-sky-500/90 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                            ${b.bookCategory}
+                        </span>
+                    </div>
+                    
+                    <div class="w-full md:w-2/3 flex flex-col">
+                        <h1 class="text-4xl md:text-5xl font-bold serif-font mb-4 text-white">${b.bookName}</h1>
+                        <div class="w-20 h-1 bg-gradient-primary rounded-full mb-6"></div>
+                        
+                        <div class="flex items-end gap-4 mb-8">
+                            <span class="text-4xl font-bold text-sky-400">₹${b.bookPrice}</span>
+                            <span class="text-slate-400 mb-1">Tax included</span>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mb-3">Synopsis</h3>
+                        <p class="text-slate-300 leading-relaxed mb-8 flex-grow whitespace-pre-line text-lg">${b.bookDescription}</p>
+                        
+                        <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 mt-auto">
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <button onclick="addToCart(${b.bookId}, '${b.bookName.replace(/'/g, "\\'")}', ${b.bookPrice}, '${b.bookImg}')" class="flex-1 bg-gradient-primary hover:shadow-lg hover:shadow-sky-500/30 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                                    <i class="fas fa-cart-plus text-xl"></i> Add to Cart
+                                </button>
+                                <button onclick="addToCart(${b.bookId}, '${b.bookName.replace(/'/g, "\\'")}', ${b.bookPrice}, '${b.bookImg}'); window.location.href='cart.html'" class="flex-1 bg-white text-slate-900 border border-transparent hover:bg-slate-200 font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2">
+                                    Buy Now
+                                </button>
+                            </div>
+                            <p class="text-slate-400 text-sm mt-4 text-center flex items-center justify-center gap-2">
+                                <i class="fas fa-shield-alt"></i> Secure checkout powered by NexBook
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `<p class="text-center text-red-400 w-full py-20">Error loading book details.</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

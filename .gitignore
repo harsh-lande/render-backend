@@ -1,0 +1,11 @@
+# Ignore Installers and Zips
+*.exe
+*.zip
+*.tar
+*.msi
+
+# Ignore Backend Build files
+backend/target/
+
+# Ignore Frontend dependencies (if applicable)
+frontend/node_modules/
